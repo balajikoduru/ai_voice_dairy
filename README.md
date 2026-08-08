@@ -1,36 +1,88 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AI Voice Diary 🎙️
 
-## Getting Started
+An AI-powered voice diary web app. Record a voice note and it is transcribed,
+stripped of filler words, categorized, and folded into a daily summary — with
+support for English and Hindi.
 
-First, run the development server:
+## Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- **Voice recording** — start / pause / stop / replay in the browser (MediaRecorder API)
+- **Speech-to-text** — Google Gemini (free tier), auto-detects spoken language
+- **Filler-word removal** — "um", "uh", "hmm" (and Hindi fillers) cleaned by AI
+- **AI categorization** — Ideas · Memories · Reflections · Reminders · Important Events
+- **Daily summary** — one AI-generated summary stored per diary day
+- **Timeline** — browse previous days and entries
+- **Multi-language** — English, Hindi, and Telugu (UI + transcription + summaries)
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Tech stack
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Layer | Choice |
+|---|---|
+| Framework | Next.js 16 (App Router, TypeScript) |
+| Styling | Tailwind CSS 4 |
+| AI | Gemini 3.6 Flash — transcription, cleanup, categorization, summaries |
+| Database + audio storage | Supabase (Postgres + Storage) |
+| Hosting | Vercel |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Setup
 
-## Learn More
+1. **Clone and install**
 
-To learn more about Next.js, take a look at the following resources:
+   ```bash
+   npm install
+   ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+2. **Create a Supabase project** at [supabase.com](https://supabase.com) (free tier).
+   Open the SQL Editor and run the contents of [`supabase/schema.sql`](supabase/schema.sql).
+   This creates the `entries` and `daily_summaries` tables and a public `audio` storage bucket.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+3. **Get a Gemini API key** at [aistudio.google.com/apikey](https://aistudio.google.com/apikey) (free tier).
 
-## Deploy on Vercel
+4. **Configure environment** — copy `.env.example` to `.env.local` and fill in:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+   ```
+   NEXT_PUBLIC_SUPABASE_URL=      # Supabase → Project Settings → API
+   SUPABASE_SERVICE_ROLE_KEY=     # Supabase → Project Settings → API (service_role)
+   GEMINI_API_KEY=                # Google AI Studio
+   ```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+5. **Run**
+
+   ```bash
+   npm run dev
+   ```
+
+   Open http://localhost:3000 — microphone access requires `localhost` or HTTPS.
+
+## Deployment (Vercel)
+
+Import the GitHub repo into Vercel, add the three environment variables above,
+and deploy. No other configuration is needed.
+
+## Architecture notes & assumptions
+
+- **Single-user demo** — no authentication. All database access goes through
+  Next.js API routes using the Supabase service role key; RLS stays enabled so
+  the public anon key can't read the tables.
+- **Audio flows through the API route** (webm/opus is ~150 KB per minute, well
+  under Vercel's 4.5 MB request limit — roughly 20 minutes of audio headroom).
+- **One AI call per entry** — Gemini receives the audio and returns transcript,
+  cleaned transcript, category, and detected language as structured JSON.
+- **Free-tier rate limits** — Gemini free tier allows ~10 requests/min, ample
+  for diary usage.
+
+## AI models used
+
+- `gemini-3.6-flash` — speech-to-text, filler-word removal, categorization,
+  and daily summaries. (2.5-flash is gated for new API accounts, so the
+  newest stable Flash model is used instead.)
+
+## Roadmap
+
+- [x] Phase 1 — scaffold, Supabase schema, typed clients, env config
+- [x] Phase 2 — recorder component (start/pause/stop/replay)
+- [x] Phase 3 — transcription + AI processing pipeline (`POST/GET /api/entries`)
+- [x] Phase 4 — diary timeline UI (day grouping, category badges, raw/clean toggle, audio playback)
+- [x] Phase 5 — daily summaries (on-demand generation, stale-summary refresh)
+- [x] Phase 6 — English/Hindi/Telugu UI toggle (persisted, localized dates and category labels)
+- [ ] Phase 7 — polish and deploy
