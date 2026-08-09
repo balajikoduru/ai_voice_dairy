@@ -2,7 +2,7 @@
 
 An AI-powered voice diary web app. Record a voice note and it is transcribed,
 stripped of filler words, categorized, and folded into a daily summary — with
-support for English and Hindi.
+support for English, Hindi, and Telugu.
 
 ## Features
 
