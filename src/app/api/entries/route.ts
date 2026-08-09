@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { randomUUID } from "crypto";
 import { getSupabase, AUDIO_BUCKET } from "@/lib/supabase";
 import { processAudio } from "@/lib/gemini";
+import { serverErrorResponse } from "@/lib/api";
 
 // Gemini processing can take a while for longer recordings.
 export const maxDuration = 60;
@@ -103,9 +104,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json(data, { status: 201 });
   } catch (e) {
-    console.error("POST /api/entries failed:", e);
-    const message = e instanceof Error ? e.message : "Something went wrong.";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return serverErrorResponse("POST /api/entries", e);
   }
 }
 
@@ -128,8 +127,6 @@ export async function GET(req: Request) {
     }
     return NextResponse.json(data);
   } catch (e) {
-    console.error("GET /api/entries failed:", e);
-    const message = e instanceof Error ? e.message : "Something went wrong.";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return serverErrorResponse("GET /api/entries", e);
   }
 }

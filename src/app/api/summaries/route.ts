@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSupabase } from "@/lib/supabase";
 import { summarizeEntries } from "@/lib/gemini";
+import { serverErrorResponse } from "@/lib/api";
 import type { Category } from "@/lib/types";
 
 export const maxDuration = 60;
@@ -17,9 +18,7 @@ export async function GET() {
     }
     return NextResponse.json(data);
   } catch (e) {
-    console.error("GET /api/summaries failed:", e);
-    const message = e instanceof Error ? e.message : "Something went wrong.";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return serverErrorResponse("GET /api/summaries", e);
   }
 }
 
@@ -76,8 +75,6 @@ export async function POST(req: Request) {
 
     return NextResponse.json(row);
   } catch (e) {
-    console.error("POST /api/summaries failed:", e);
-    const message = e instanceof Error ? e.message : "Something went wrong.";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return serverErrorResponse("POST /api/summaries", e);
   }
 }
